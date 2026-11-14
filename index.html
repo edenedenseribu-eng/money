@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f9fc">
+  <meta name="description" content="Private offline monthly bill tracker">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Monthly Bills</title>
+</head>
+<body>
+  <main id="lockScreen" class="lock-wrap">
+    <section class="lock-card">
+      <div class="brand-mark">₿</div>
+      <p class="eyebrow">PRIVATE • OFFLINE</p>
+      <h1>Monthly Bills</h1>
+      <p class="muted">Your bills, stored securely on this device.</p>
+      <form id="unlockForm">
+        <label for="pinInput" id="pinLabel">Create a password</label>
+        <input id="pinInput" type="password" autocomplete="current-password" minlength="4" placeholder="At least 4 characters" required>
+        <button class="primary full" id="unlockBtn">Create secure vault</button>
+      </form>
+      <p class="tiny muted" id="lockHint">Your password cannot be recovered. Keep a backup somewhere safe.</p>
+      <p class="error" id="lockError" role="alert"></p>
+    </section>
+  </main>
+
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">YOUR FINANCES</p>
+        <h1>Monthly Bills</h1>
+      </div>
+      <button id="lockNow" class="icon-btn" title="Lock app" aria-label="Lock app">⌑</button>
+    </header>
+
+    <section class="month-row">
+      <button id="prevMonth" class="month-arrow" aria-label="Previous month">‹</button>
+      <div><div class="month-label" id="monthLabel"></div><div class="muted tiny">Monthly overview</div></div>
+      <button id="nextMonth" class="month-arrow" aria-label="Next month">›</button>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card total-card"><span>Total bills</span><strong id="totalAmount">RM 0.00</strong><small id="billCount">0 bills</small></article>
+      <article class="summary-card paid-card"><span>Paid</span><strong id="paidAmount">RM 0.00</strong><small id="paidCount">0 paid</small></article>
+      <article class="summary-card due-card"><span>Outstanding</span><strong id="dueAmount">RM 0.00</strong><small id="dueCount">0 remaining</small></article>
+    </section>
+
+    <section class="section-head">
+      <div><h2>Your bills</h2><p class="muted tiny">Track payments and receipts</p></div>
+      <button class="primary add-btn" id="addBill">＋ Add bill</button>
+    </section>
+
+    <div class="filter-row">
+      <button class="filter active" data-filter="all">All</button>
+      <button class="filter" data-filter="unpaid">Unpaid</button>
+      <button class="filter" data-filter="paid">Paid</button>
+    </div>
+    <section id="billList" class="bill-list"></section>
+
+    <section class="tools-card">
+      <h2>Tools & backup</h2>
+      <div class="tool-grid">
+        <button class="tool-btn" id="copyMonth">↻ <span>Copy last month</span></button>
+        <button class="tool-btn" id="exportBackup">⇩ <span>Encrypted backup</span></button>
+        <button class="tool-btn" id="importBackup">⇧ <span>Restore backup</span></button>
+        <button class="tool-btn" id="exportReport">▤ <span>Monthly PDF</span></button>
+      </div>
+      <p class="tiny muted">Backups are encrypted with your password. PDF export opens the print dialog; choose “Save as PDF”.</p>
+    </section>
+
+    <nav class="bottom-nav">
+      <button class="nav-item selected" id="homeNav">▦<span>Overview</span></button>
+      <button class="nav-item" id="settingsNav">⚙<span>Settings</span></button>
+    </nav>
+  </div>
+
+  <dialog id="billDialog">
+    <form method="dialog" id="billForm" class="dialog-form">
+      <div class="dialog-head"><div><p class="eyebrow">BILL DETAILS</p><h2 id="dialogTitle">Add a bill</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div>
+      <input type="hidden" id="billId">
+      <label>Bill name<input id="billName" maxlength="60" placeholder="e.g. TNB Electricity" required></label>
+      <div class="two-col">
+        <label>Category<select id="billCategory"><option>Utilities</option><option>Internet</option><option>Phone</option><option>Housing</option><option>Insurance</option><option>Subscription</option><option>Other</option></select></label>
+        <label>Amount (RM)<input id="billAmount" type="number" min="0" step="0.01" placeholder="0.00" required></label>
+      </div>
+      <label>Due date<input id="billDue" type="date"></label>
+      <label>Notes<textarea id="billNotes" rows="2" maxlength="300" placeholder="Optional notes"></textarea></label>
+      <label class="upload-label">Receipt / bill photo<input id="billPhoto" type="file" accept="image/*"></label>
+      <div id="photoPreview" class="photo-preview"></div>
+      <label class="check-row"><input id="billPaid" type="checkbox"> Mark as paid</label>
+      <div class="dialog-actions"><button type="button" class="secondary" id="deleteBill">Delete</button><button class="primary" id="saveBill" value="default">Save bill</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <div class="dialog-form">
+      <div class="dialog-head"><div><p class="eyebrow">PREFERENCES</p><h2>Settings</h2></div><button class="icon-btn" id="closeSettings">×</button></div>
+      <div class="setting-row"><div><strong>Currency</strong><p class="tiny muted">Displayed throughout the app</p></div><strong>MYR (RM)</strong></div>
+      <div class="setting-row"><div><strong>Storage</strong><p class="tiny muted">Encrypted on this device</p></div><span class="status-pill">Private</span></div>
+      <button class="secondary full" id="changePassword">Change password</button>
+      <p class="tiny muted">If you clear browser data or lose this phone, restore using your encrypted backup. Install the PWA from a secure website (HTTPS) once; it then works offline.</p>
+    </div>
+  </dialog>
+  <input type="file" id="backupFile" accept=".json,application/json" hidden>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
